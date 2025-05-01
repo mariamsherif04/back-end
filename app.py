@@ -4,8 +4,11 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app, supports_credentials=True)  # or add specific origins if needed
+
 app.secret_key = 'do not interrupt'
 
 # Global database connection
