@@ -110,39 +110,37 @@
   }
 
   .image-gallery {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   gap: 2rem;
   margin-top: 2rem;
 }
 
 .image-gallery figure {
   background-color: #ffffff;
-  padding: 0.5rem;
+  padding: 0.75rem;
   border: 1px solid #e5e7eb;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  max-width: 900px;
+  width: 100%;
   text-align: center;
-
-  /* Optional: limit figure width for better spacing */
-  max-width: 800px;
-  margin: 1rem auto;
 }
 
 .image-gallery img {
-  width: 100%;        /* stretch to figure width */
-  max-height: 600px;  /* increase image height cap */
+  width: 100%;
+  max-height: 600px;
   object-fit: contain;
   border-radius: 4px;
-  display: block;
-  margin: auto;
 }
 
 .image-gallery figcaption {
   font-size: 1rem;
-  color: #374151;
-  margin-top: 0.75rem;
+  color: #4b5563;
+  margin-top: 0.5rem;
 }
+
 
 </style>
 
@@ -745,30 +743,67 @@ The Method of Lines discretizes space and solves the resulting system of ODEs us
 
 <div class="image-gallery">
   <figure>
-    <img src="Rplot01.png" alt="Strang Splitting Plot at t=30">
-    <figcaption>Figure 1: S(x,t) using Strang Splitting at t = 30</figcaption>
+    <img src="Rplot01.png" alt="S(x,t) - Susceptible Population">
+    <figcaption><strong>S(x,t):</strong> The spatial profile shows a decaying Gaussian shape due to vaccination and infection.</figcaption>
   </figure>
 
   <figure>
-    <img src="Rplot02.png" alt="Crank–Nicolson Heatmap">
-    <figcaption>Figure 2: Crank–Nicolson result showing spatial diffusion</figcaption>
+    <img src="Rplot02.png" alt="V(x,t) - Vaccinated Population">
+    <figcaption><strong>V(x,t):</strong> Increases in height over time, stabilizing as the susceptible pool declines.</figcaption>
   </figure>
 
   <figure>
-    <img src="Rplot03.png" alt="PINN prediction vs true values">
-    <figcaption>Figure 3: Deep Learning prediction vs true PDE solution</figcaption>
+    <img src="Rplot03.png" alt="E(x,t) - Exposed Population">
+    <figcaption><strong>E(x,t):</strong> Peaks early and fades, reflecting the short incubation period.</figcaption>
   </figure>
 
-   <figure>
-    <img src="Rplot04.png" alt="PINN prediction vs true values">
-    <figcaption>Figure 3: Deep Learning prediction vs true PDE solution</figcaption>
-  </figure>
-  
   <figure>
-    <img src="Rplot05.png" alt="PINN prediction vs true values">
-    <figcaption>Figure 3: Deep Learning prediction vs true PDE solution</figcaption>
+    <img src="Rplot04.png" alt="I(x,t) - Infected Population">
+    <figcaption><strong>I(x,t):</strong> Peaks around the middle of the simulation and then decays.</figcaption>
   </figure>
+
+  <figure>
+    <img src="Rplot05.png" alt="R(x,t) - Recovered Population">
+    <figcaption><strong>R(x,t):</strong> Gradually rises and then plateaus.</figcaption>
+  </figure>
+
+  <p style="text-align:center; font-size: 1rem; color:#374151; margin-top: 1rem;">
+    Each compartment displays smooth, symmetric wave-like patterns, consistent with diffusion and biological dynamics.
+  </p>
 </div>
+
+<div class="image-gallery">
+  <figure>
+    <img src="Rplot06.png" alt="S(0,t) - Susceptible over time">
+    <figcaption><strong>S(0,t):</strong> Rapid decline followed by stabilization.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="Rplot07.png" alt="V(0,t) - Vaccinated over time">
+    <figcaption><strong>V(0,t):</strong> Rapid rise then plateau.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="Rplot08.png" alt="E(0,t) - Exposed over time">
+    <figcaption><strong>E(0,t):</strong> Rise-and-fall pattern with expected incubation lag.</figcaption>
+  </figure>
+
+  <figure>
+    <img src="Rplot09.png" alt="I(0,t) - Infected over time">
+    <figcaption><strong>I(0,t):</strong> Rise-and-fall pattern with delay after E(t).</figcaption>
+  </figure>
+
+  <figure>
+    <img src="Rplot10.png" alt="R(0,t) - Recovered over time">
+    <figcaption><strong>R(0,t):</strong> Monotonic increase as population recovers.</figcaption>
+  </figure>
+
+  <p style="text-align:center; font-size: 1rem; color:#374151; margin-top: 1rem;">
+    We also track each compartment's value over time at the spatial center (<em>x = 0</em>), revealing typical epidemic patterns and delays.
+  </p>
+</div>
+
+
 
 
 </body>
