@@ -6,24 +6,110 @@
   
   <title>Influenza SVEIR Model</title>
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      max-width: 800px;
-      margin: auto;
-      padding: 1.5rem;
-      background-color: #fefefe;
-      color: #333;
-    }
-    h1, h2 {
-      color: #005f73;
-      border-bottom: 2px solid #ddd;
-      padding-bottom: 0.3rem;
-    }
-    p {
-      text-align: justify;
-    }
-  </style>
+  body {
+    font-family: 'Segoe UI', Roboto, Arial, sans-serif;
+    background-color: #f9fafb;
+    color: #1f2937;
+    line-height: 1.75;
+    max-width: 960px;
+    margin: auto;
+    padding: 2rem;
+  }
+
+  h1, h2, h3, h4 {
+    color: #0f172a;
+    margin-top: 2rem;
+    border-bottom: 2px solid #e5e7eb;
+    padding-bottom: 0.3rem;
+  }
+
+  h1 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+  }
+
+  h2 {
+    font-size: 1.6rem;
+  }
+
+  h3 {
+    font-size: 1.3rem;
+  }
+
+  h4 {
+    font-size: 1.1rem;
+    color: #334155;
+  }
+
+  p, li {
+    font-size: 1rem;
+    text-align: justify;
+    margin: 0.6rem 0;
+  }
+
+  ul, ol {
+    padding-left: 1.4rem;
+    margin: 1rem 0;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1.2rem;
+    background-color: #ffffff;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  }
+
+  th, td {
+    border: 1px solid #e2e8f0;
+    padding: 0.6rem 0.8rem;
+    text-align: left;
+  }
+
+  th {
+    background-color: #e2e8f0;
+    font-weight: bold;
+  }
+
+  code {
+    background-color: #f3f4f6;
+    padding: 0.2rem 0.4rem;
+    border-radius: 4px;
+    font-family: Consolas, monospace;
+    font-size: 0.95rem;
+  }
+
+  pre {
+    background-color: #f8fafc;
+    padding: 1rem;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-family: Consolas, monospace;
+    font-size: 0.95rem;
+  }
+
+  blockquote {
+    margin: 1rem 0;
+    padding: 0.8rem 1rem;
+    background-color: #f1f5f9;
+    border-left: 4px solid #94a3b8;
+    font-style: italic;
+    color: #475569;
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid #d1d5db;
+    margin: 2rem 0;
+  }
+
+  /* For equations to stand out */
+  .MathJax {
+    font-size: 110% !important;
+  }
+</style>
+
   <script type="text/javascript"
   id="MathJax-script"
   async
