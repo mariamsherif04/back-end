@@ -2,41 +2,159 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Influenza SVEIR Model</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   
-  <!-- MathJax for rendering LaTeX equations -->
+  <title>Influenza SVEIR Model</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      max-width: 800px;
+      margin: auto;
+      padding: 1.5rem;
+      background-color: #fefefe;
+      color: #333;
+    }
+    h1, h2 {
+      color: #005f73;
+      border-bottom: 2px solid #ddd;
+      padding-bottom: 0.3rem;
+    }
+    p {
+      text-align: justify;
+    }
+  </style>
   <script type="text/javascript"
-    id="MathJax-script"
-    async
-    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  id="MathJax-script"
+  async
+  src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
   </script>
+
 </head>
 <body>
+
   <h1>🦠 Influenza SVEIR PDE Model</h1>
 
   <h2>Abstract</h2>
   <p>
-    This project solves a spatial SVEIR PDE model using multiple numerical methods...
+    This report addresses the numerical solution of a one-dimensional partial differential equation (PDE) model describing the spatial and temporal dynamics of an influenza epidemic with vaccination. The model follows the SVEIR compartmental structure, representing the populations of Susceptible, Vaccinated, Exposed, Infected, and Recovered individuals as functions of both space and time. Originally solved using the Method of Lines (MOL), we extend the analysis by applying a range of other methods, including several finite difference schemes, a Strang splitting method, finite volume method, spectral method and a deep learning approach. The goal is to compare the accuracy and efficiency of each method in modeling influenza spread with vaccination and diffusion.
   </p>
 
-  <h2>Model Equations</h2>
-  <p>Equations are rendered below using MathJax:</p>
-
+  <h2>I. Introduction</h2>
   <p>
-    $$
-    \frac{\partial S}{\partial t} = -\beta E S - \beta I S + \alpha I S - \phi S - rS + \delta R + \theta V + r + d_1 \frac{\partial^2 S}{\partial x^2}
-    $$
+    Influenza transmission is governed by multiple biological processes including infection, recovery, immunity loss, and vaccination. While classical compartmental models typically address only the temporal dynamics of disease spread, spatial heterogeneity—such as population movement and localized outbreaks—can significantly influence epidemic behavior. To capture these effects, this work models influenza using a spatiotemporal SVEIR framework, represented by a system of coupled nonlinear partial differential equations (PDEs). The model tracks the densities of Susceptible (S), Vaccinated (V), Exposed (E), Infected (I), and Recovered (R) individuals as functions of both time and space.
+  </p>
+  <p>
+    Originally solved using the Method of Lines (MOL), which converts the PDE system into ODEs by discretizing space, the model provides insight into how vaccination and diffusion influence epidemic spread. In this project, we extend the analysis by comparing six approaches: the Explicit Finite Difference Method, the Crank–Nicolson Method, the Strang Splitting Method, Finite Volume Method, Spectral Method and a Deep Learning model trained to approximate PDE solutions.
   </p>
 
-  <h2>Plots</h2>
-  <img src="plots/strang_plot.png" alt="Strang Splitting Plot" width="600"/>
+  <h2>II. Literature Review</h2>
+  <p>
+    Recent studies have advanced epidemic modeling by incorporating spatial and temporal effects. Chen and Xu (2019) proposed a two-strain influenza model with vaccines, including spatial diffusion and time delays to reflect incubation and movement [1]. They analyzed equilibrium stability using Lyapunov methods and confirmed results numerically. Jang et al. (2020) addressed optimal vaccine allocation in a spatial SIR model, using constrained optimization to minimize infections and costs, highlighting the impact of spatial heterogeneity [2]. Building on these works, we explore numerical and data-driven methods for solving a spatial SVEIR influenza model with vaccination and diffusion.
+  </p>
 
-  <h2>References</h2>
-  <ul>
-    <li>Chen & Xu (2019) - Delayed PDE model of influenza</li>
-    <li>Jang et al. (2020) - SIR diffusion and vaccination optimization</li>
-  </ul>
+  <h2>III. Model Formulation</h2>
+
+<p>
+  This study models the spread of influenza using a one-dimensional reaction–diffusion system based on the SVEIR framework. The model captures both temporal and spatial dynamics of disease transmission and vaccination. Five state variables are tracked as functions of space \( x \in [-3, 3] \) and time \( t \geq 0 \):
+</p>
+
+<ul>
+  <li><strong>S(x, t):</strong> Susceptible population</li>
+  <li><strong>V(x, t):</strong> Vaccinated population</li>
+  <li><strong>E(x, t):</strong> Exposed (latent) population</li>
+  <li><strong>I(x, t):</strong> Infected population</li>
+  <li><strong>R(x, t):</strong> Recovered population</li>
+</ul>
+
+<h3>PDE System</h3>
+
+<p>The system is governed by nonlinear partial differential equations representing infection, recovery, immunity loss, and diffusion:</p>
+
+<p>
+  $$
+  \frac{\partial S}{\partial t} = -\beta\beta_E E S - \beta\beta_I I S + \alpha I S - \phi S - rS + \delta R + \theta V + r + d_1 \frac{\partial^2 S}{\partial x^2}
+  $$
+</p>
+
+<p>
+  $$
+  \frac{\partial V}{\partial t} = -\beta\beta_E\beta_V E V - \beta\beta_I\beta_V I V + \alpha I V - rV - \theta V + \phi S + d_2 \frac{\partial^2 V}{\partial x^2}
+  $$
+</p>
+
+<p>
+  $$
+  \frac{\partial E}{\partial t} = \beta\beta_E E S + \beta\beta_I I S + \beta\beta_E\beta_V E V + \beta\beta_I\beta_V I V + \alpha I E - (r + \kappa + \sigma) E + d_3 \frac{\partial^2 E}{\partial x^2}
+  $$
+</p>
+
+<p>
+  $$
+  \frac{\partial I}{\partial t} = \sigma E - (r + \alpha + \gamma) I + \alpha I^2 + d_4 \frac{\partial^2 I}{\partial x^2}
+  $$
+</p>
+
+<p>
+  $$
+  \frac{\partial R}{\partial t} = \kappa E + \gamma I - rR - \delta R + \alpha I R + d_5 \frac{\partial^2 R}{\partial x^2}
+  $$
+</p>
+
+<h3>Boundary and Initial Conditions</h3>
+
+<p>
+  Neumann (no-flux) boundary conditions are applied at \( x = \pm 3 \) to simulate a closed domain:
+</p>
+
+<p>
+  $$
+  \left. \frac{\partial U}{\partial x} \right|_{x = -3}^{x = 3} = 0, \quad \text{for } U = S, V, E, I, R
+  $$
+</p>
+
+<p>Initial conditions are defined as:</p>
+
+<p>
+  $$
+  \begin{align*}
+  S(x, 0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+  V(x, 0) &= 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+  E(x, 0) &= 0, \quad I(x, 0) = 0.04 \exp(-x^2), \quad R(x, 0) = 0
+  \end{align*}
+  $$
+</p>
+
+<h3>Parameter Values</h3>
+
+<table border="1" cellspacing="0" cellpadding="6">
+  <thead>
+    <tr>
+      <th>Parameter</th>
+      <th>Description</th>
+      <th>Value</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr><td>&beta;</td><td>Contact rate</td><td>0.5140</td></tr>
+    <tr><td>&beta;<sub>E</sub></td><td>Infectiousness of exposed</td><td>0.25</td></tr>
+    <tr><td>&beta;<sub>I</sub></td><td>Infectiousness of infected</td><td>1</td></tr>
+    <tr><td>&beta;<sub>V</sub></td><td>Vaccine protection factor</td><td>0.9</td></tr>
+    <tr><td>&sigma;<sup>-1</sup></td><td>Latent period (days)</td><td>2</td></tr>
+    <tr><td>&gamma;<sup>-1</sup></td><td>Recovery period (days)</td><td>5</td></tr>
+    <tr><td>&delta;<sup>-1</sup></td><td>Immunity loss duration (days)</td><td>365</td></tr>
+    <tr><td>r</td><td>Birthrate</td><td>7.14 &times; 10<sup>-5</sup></td></tr>
+    <tr><td>&alpha;</td><td>Flu-induced mortality rate</td><td>9.3 &times; 10<sup>-6</sup></td></tr>
+    <tr><td>&kappa;</td><td>Latent recovery rate</td><td>1.857 &times; 10<sup>-4</sup></td></tr>
+    <tr><td>&theta;<sup>-1</sup></td><td>Vaccine immunity duration (days)</td><td>365</td></tr>
+    <tr><td>&phi;</td><td>Vaccination rate</td><td>0.05</td></tr>
+    <tr><td>d<sub>1</sub>, d<sub>2</sub></td><td>Diffusivity for S, V</td><td>0.05</td></tr>
+    <tr><td>d<sub>3</sub></td><td>Diffusivity for E</td><td>0.025</td></tr>
+    <tr><td>d<sub>4</sub></td><td>Diffusivity for I</td><td>0.001</td></tr>
+    <tr><td>d<sub>5</sub></td><td>Diffusivity for R</td><td>0</td></tr>
+  </tbody>
+</table>
+
+
 </body>
 </html>
