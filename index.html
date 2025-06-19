@@ -108,6 +108,35 @@
   .MathJax {
     font-size: 110% !important;
   }
+
+  .image-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.image-gallery figure {
+  background-color: #ffffff;
+  padding: 0.5rem;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  text-align: center;
+}
+
+.image-gallery img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+}
+
+.image-gallery figcaption {
+  font-size: 0.95rem;
+  color: #4b5563;
+  margin-top: 0.5rem;
+}
+
 </style>
 
   <script type="text/javascript"
@@ -493,6 +522,114 @@ A second Runge–Kutta integration is performed over the remaining half-step to 
 <p>
 This method allows flexibility by using different solvers suited to each component (reaction vs. diffusion). It is well-suited for nonlinear, spatially extended epidemic models, as it balances accuracy, speed, and implementation simplicity.
 </p>
+
+<h2>VI. Finite Volume Method with Runge-Kutta 4</h2>
+
+<h3>1. Governing Equations</h3>
+<p>
+The model consists of partial differential equations (PDEs) describing the time evolution of each compartment (S, V, E, I, R) over space and time. Each equation includes:
+</p>
+<ul>
+  <li><strong>Reaction terms:</strong> representing infection, vaccination, recovery, etc.</li>
+  <li><strong>Diffusion terms:</strong> representing spatial spread of each population group.</li>
+</ul>
+
+<p>The general form for each compartment \( u(x, t) \) is:</p>
+<p>
+$$
+\frac{\partial u}{\partial t} = \text{Reaction}(u) + D \frac{\partial^2 u}{\partial x^2}
+$$
+</p>
+<p>
+where \( D \) is the diffusion coefficient for that compartment.
+</p>
+
+<h3>2. Spatial Discretization: Finite Volume</h3>
+<p>
+The spatial domain \( [x_l, x_u] \) is divided into \( n_x \) uniform control volumes:
+</p>
+
+<p>
+$$
+x_i = x_l + (i-1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}
+$$
+</p>
+
+<p>The second derivative is approximated using a central finite volume scheme:</p>
+
+<p>
+$$
+\frac{\partial^2 u}{\partial x^2} \Big|_{x_i} \approx \frac{u_{i+1} - 2u_i + u_{i-1}}{\Delta x^2}
+$$
+</p>
+
+<h4>Boundary Conditions:</h4>
+<p>
+Zero-flux (Neumann) conditions are enforced by mirroring values at boundaries:
+</p>
+
+<p>
+$$
+\left.\frac{\partial u}{\partial x}\right|_{x = x_l} = 0, \quad \left.\frac{\partial u}{\partial x}\right|_{x = x_u} = 0
+$$
+</p>
+
+<h3>3. Time Integration: Runge-Kutta 4th Order (RK4)</h3>
+<p>
+Time is discretized using uniform steps:
+</p>
+
+<p>
+$$
+t_n = t_0 + n\Delta t, \quad n = 0, 1, ..., N_t
+$$
+</p>
+
+<p>
+The RK4 scheme is used to update \( u \) over each time step:
+</p>
+
+<p>
+$$
+\begin{aligned}
+k_1 &= f(u^n) \\
+k_2 &= f(u^n + \tfrac{\Delta t}{2} k_1) \\
+k_3 &= f(u^n + \tfrac{\Delta t}{2} k_2) \\
+k_4 &= f(u^n + \Delta t \cdot k_3) \\
+u^{n+1} &= u^n + \tfrac{\Delta t}{6} (k_1 + 2k_2 + 2k_3 + k_4)
+\end{aligned}
+$$
+</p>
+
+<h3>4. Initial Conditions</h3>
+<p>The system is initialized with Gaussian spatial distributions:</p>
+
+<p>
+$$
+\begin{aligned}
+S(x,0) &= 0.86 \exp\left( -\left(\frac{x}{1.4} \right)^2 \right), \\
+V(x,0) &= 0.10 \exp\left( -\left(\frac{x}{1.4} \right)^2 \right), \\
+E(x,0) &= 0, \quad I(x,0) = 0.04 \exp(-x^2), \quad R(x,0) = 0
+\end{aligned}
+$$
+</p>
+
+<h3>5. Output and Visualization</h3>
+<ul>
+  <li><strong>ip = 1:</strong> Plot each compartment over space for several time points.</li>
+  <li><strong>ip = 2:</strong> Plot each variable over time at a fixed spatial location (e.g., \( x = 0 \)).</li>
+</ul>
+
+<h3>6. Result Storage</h3>
+<p>
+Solution snapshots at \( t = 0 \) and \( t = 60 \) are saved for future analysis. Each variable is stored as a function of space \( u(x, t) \).
+</p>
+
+<h3>Conclusion</h3>
+<p>
+This numerical scheme combines the accuracy of the Finite Volume Method for space and the stability of RK4 for time, offering a robust way to simulate epidemic dynamics with spatial diffusion and biological interactions.
+</p>
+
 <h2>V. Deep Learning Solution</h2>
 
 <h3>A. Introduction</h3>
@@ -571,6 +708,37 @@ While PINNs offer flexibility, they also face limitations. Some compartments—p
 <p>
 Adjusting weight terms and increasing the number of training data points can improve performance. Regularization and adaptive learning rates may also help stabilize learning.
 </p>
+
+h2>VI. Results</h2>
+
+<p>
+This section presents and compares the spatial and temporal behavior of the <strong>Susceptible (S)</strong> and <strong>Recovered (R)</strong> populations under different numerical methods. The reference solution obtained using the <em>Method of Lines (MOL)</em> serves as a benchmark for comparison against the <strong>Crank–Nicolson</strong>, <strong>Strang Splitting</strong>, and <strong>Deep Learning</strong> approaches.
+</p>
+
+<h3>A. Numerical Results</h3>
+
+<h4>1. Reference Solution: Method of Lines</h4>
+
+<p>
+The Method of Lines discretizes space and solves the resulting system of ODEs using standard time integration techniques. The following plot illustrates the spatial distribution of the Susceptible and Recovered populations at regular time steps.
+</p>
+
+<div class="image-gallery">
+  <figure>
+    <img src="D:/m/MOL Method/Rplot01.png" alt="Strang Splitting Plot at t=30">
+    <figcaption>Figure 1: S(x,t) using Strang Splitting at t = 30</figcaption>
+  </figure>
+
+  <figure>
+    <img src="images/crank_result.png" alt="Crank–Nicolson Heatmap">
+    <figcaption>Figure 2: Crank–Nicolson result showing spatial diffusion</figcaption>
+  </figure>
+
+  <figure>
+    <img src="images/pinn_vs_truth.png" alt="PINN prediction vs true values">
+    <figcaption>Figure 3: Deep Learning prediction vs true PDE solution</figcaption>
+  </figure>
+</div>
 
 
 </body>
