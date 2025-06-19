@@ -112,9 +112,16 @@
   .image-gallery {
   display: flex;
   flex-direction: column;
-  align-items: center;
   gap: 2rem;
   margin-top: 2rem;
+  align-items: center;
+}
+
+.image-row {
+  display: flex;
+  gap: 2rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
 .image-gallery figure {
@@ -123,8 +130,7 @@
   border: 1px solid #e5e7eb;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
-  max-width: 900px;
-  width: 100%;
+  width: 420px;
   text-align: center;
 }
 
@@ -528,125 +534,217 @@ A second Runge–Kutta integration is performed over the remaining half-step to 
 This method allows flexibility by using different solvers suited to each component (reaction vs. diffusion). It is well-suited for nonlinear, spatially extended epidemic models, as it balances accuracy, speed, and implementation simplicity.
 </p>
 
-<h3>Finite Volume Method</h3>
+<h3>Finite Volume Method (FVM) with RK4</h3>
 
-<h4>1. Governing Equations</h4>
+<h4>1. Overview</h4>
 <p>
-The model consists of partial differential equations (PDEs) that describe the time evolution of each compartment \( u(x,t) \), where \( u \in \{S, V, E, I, R\} \). Each equation contains:
+We solve the SVEIR reaction–diffusion PDE model for influenza spread using the <strong>Finite Volume Method (FVM)</strong> for spatial discretization. This method conserves flux across control volumes and handles diffusion and reaction terms efficiently. Time integration is performed using the classical fourth-order Runge–Kutta method (RK4).
 </p>
-<ul>
-  <li><strong>Reaction terms</strong>: Representing biological processes such as infection, vaccination, recovery, etc.</li>
-  <li><strong>Diffusion terms</strong>: Representing the spatial movement of individuals.</li>
-</ul>
 
+<h4>2. SVEIR PDE Model</h4>
 <p>
-The general form of the PDE is:
+The equations for the five compartments are:
 </p>
 
 <p>
-$$
-\frac{\partial u}{\partial t} = \text{Reaction}(u) + D \frac{\partial^2 u}{\partial x^2}
-$$
-</p>
-<p>
-where \( D \) is the compartment-specific diffusion coefficient.
-</p>
-
-<h4>2. Spatial Discretization: Finite Volume Scheme</h4>
-<p>
-The domain \( [x_l, x_u] \) is divided into \( n_x \) uniform control volumes:
-</p>
-<p>
-$$
-x_i = x_l + (i - 1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}
-$$
-</p>
-
-<p>
-The second derivative is approximated using the centered finite volume formula:
-</p>
-
-<p>
-$$
-\frac{\partial^2 u}{\partial x^2} \bigg|_i \approx \frac{u_{i+1} - 2u_i + u_{i-1}}{\Delta x^2}
-$$
-</p>
-
-<h5>Boundary Conditions</h5>
-<p>
-Zero-flux Neumann conditions are enforced at the domain boundaries:
-</p>
-<p>
-$$
-\left. \frac{\partial u}{\partial x} \right|_{x = x_l} = 0, \quad \left. \frac{\partial u}{\partial x} \right|_{x = x_u} = 0
-$$
-</p>
-<p>
-These are handled using mirrored (ghost) values at the edges of the domain.
-</p>
-
-<h4>3. Time Integration: Runge–Kutta 4th Order (RK4)</h4>
-<p>
-The time domain \( [t_0, t_f] \) is discretized using uniform step size \( \Delta t \):
-</p>
-
-<p>
-$$
-t_n = t_0 + n\Delta t, \quad n = 0, 1, \ldots, N_t
-$$
-</p>
-
-<p>
-To update the solution from \( u^n \) to \( u^{n+1} \), the classical RK4 method is used:
-</p>
-
-<p>
-$$
+\[
 \begin{aligned}
-k_1 &= f(u^n) \\
-k_2 &= f(u^n + \frac{\Delta t}{2} k_1) \\
-k_3 &= f(u^n + \frac{\Delta t}{2} k_2) \\
-k_4 &= f(u^n + \Delta t \cdot k_3) \\
-u^{n+1} &= u^n + \frac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\frac{\partial S}{\partial t} &= -\beta\beta_e E S - \beta\beta_i I S + \alpha I S - \phi S - rS + \delta R + \theta V + r + d_1 \nabla^2 S \\
+\frac{\partial V}{\partial t} &= -\beta\beta_e\beta_v E V - \beta\beta_i\beta_v I V + \alpha I V - rV - \theta V + \phi S + d_2 \nabla^2 V \\
+\frac{\partial E}{\partial t} &= \beta\beta_e E S + \beta\beta_i I S + \beta\beta_e\beta_v E V + \beta\beta_i\beta_v I V + \alpha I E - (r + \kappa + \sigma) E + d_3 \nabla^2 E \\
+\frac{\partial I}{\partial t} &= \sigma E - (r + \alpha + \gamma) I + \alpha I^2 + d_4 \nabla^2 I \\
+\frac{\partial R}{\partial t} &= \kappa E + \gamma I - rR - \delta R + \alpha I R + d_5 \nabla^2 R
 \end{aligned}
-$$
+\]
+</p>
+
+<p>
+Here, \( \nabla^2 u \) represents the Laplacian term, approximated using the FVM.
+</p>
+
+<h4>3. Space–Time Grid</h4>
+<p>
+The spatial domain \( x \in [x_l, x_u] \) is divided into \( n_x \) uniform cells:
+</p>
+<p>
+\[
+x_i = x_l + (i-1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}
+\]
+</p>
+<p>
+Time is discretized as:
+</p>
+<p>
+\[
+t_n = t_0 + n\Delta t, \quad n = 0,1,\dots,N_t
+\]
 </p>
 
 <h4>4. Initial Conditions</h4>
 <p>
-The system is initialized with Gaussian profiles:
-</p>
-
-<p>
-$$
+\[
 \begin{aligned}
-S(x, 0) &= 0.86 \exp\left( -\left(\frac{x}{1.4}\right)^2 \right), \quad
-V(x, 0) = 0.10 \exp\left( -\left(\frac{x}{1.4}\right)^2 \right) \\
-E(x, 0) &= 0, \quad
-I(x, 0) = 0.04 \exp(-x^2), \quad
-R(x, 0) = 0
+S(x,0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \quad
+V(x,0) = 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+I(x,0) &= 0.04 \exp(-x^2), \quad
+E(x,0) = 0, \quad R(x,0) = 0
 \end{aligned}
-$$
+\]
 </p>
 
-<h4>5. Output and Visualization</h4>
+<h4>5. Laplacian Approximation (FVM)</h4>
 <p>
-The solution is sampled at specific times for visualization:
+The second spatial derivative is approximated as:
+</p>
+<p>
+\[
+\nabla^2 u_i \approx \frac{u_{i+1} - 2u_i + u_{i-1}}{(\Delta x)^2}
+\]
+</p>
+
+<p>
+Boundary conditions (Neumann, zero-flux):
+</p>
+<p>
+\[
+\nabla^2 u_1 \approx \frac{u_2 - u_1}{(\Delta x)^2}, \quad \nabla^2 u_n \approx \frac{u_{n-1} - u_n}{(\Delta x)^2}
+\]
+</p>
+
+<h4>6. Time Integration (RK4)</h4>
+<p>
+We use RK4 to integrate the system over time:
+</p>
+<p>
+\[
+y^{n+1} = y^n + \frac{\Delta t}{6}(k_1 + 2k_2 + 2k_3 + k_4)
+\]
+</p>
+<p>
+Each stage \( k \) is computed using the discretized RHS of the PDE, including diffusion (FVM) and reaction terms.
+</p>
+
+<h4>7. Update Equations</h4>
+<p>
+At each grid point \( i \) and time step \( n \):
+</p>
+<p>
+\[
+\begin{aligned}
+S_i^{n+1} &= S_i^n + \Delta t \cdot f_S(S^n, V^n, E^n, I^n, R^n) \\
+V_i^{n+1} &= V_i^n + \Delta t \cdot f_V(S^n, V^n, E^n, I^n, R^n) \\
+E_i^{n+1} &= E_i^n + \Delta t \cdot f_E(S^n, V^n, E^n, I^n, R^n) \\
+I_i^{n+1} &= I_i^n + \Delta t \cdot f_I(S^n, V^n, E^n, I^n, R^n) \\
+R_i^{n+1} &= R_i^n + \Delta t \cdot f_R(S^n, V^n, E^n, I^n, R^n)
+\end{aligned}
+\]
+</p>
+<p>
+Where each \( f \) function includes both reaction and diffusion terms.
+</p>
+
+<h4>8. Visualization</h4>
+<p>
+We visualize the results:
 </p>
 <ul>
-  <li><code>ip = 1</code>: Plots of each compartment vs. space at time snapshots.</li>
-  <li><code>ip = 2</code>: Plots of each compartment vs. time at spatial midpoint \( x = 0 \).</li>
+  <li>As functions of space at times \( t = 0, 6, 12, ..., 60 \)</li>
+  <li>As functions of time at the spatial midpoint \( x = 0 \)</li>
 </ul>
 
-<h4>6. Result Storage</h4>
+<h4>9. Conclusion</h4>
 <p>
-For further analysis, the solution profiles at \( t = 0 \) and \( t = 60 \) are saved for all compartments as a function of space.
+The Finite Volume Method offers a conservative and accurate framework for simulating disease spread with spatial heterogeneity. Combined with the RK4 integrator, it yields reliable solutions to the nonlinear spatiotemporal SVEIR model.
 </p>
 
-<h4>Conclusion</h4>
+<h3>Spectral Method (DCT-Based) with <code>lsoda</code></h3>
+
+<h4>1. Overview</h4>
 <p>
-This method combines the Finite Volume scheme for spatial discretization and the 4th-order Runge–Kutta method for time integration. It offers a stable and accurate solution strategy for simulating spatiotemporal infectious disease dynamics, incorporating both biological interactions and diffusion-driven movement.
+We present a numerical solution to the SVEIR reaction–diffusion model for influenza using a <strong>spectral method</strong>. The model consists of five coupled partial differential equations (PDEs) for the compartments: Susceptible (S), Vaccinated (V), Exposed (E), Infected (I), and Recovered (R). We use the <strong>Discrete Cosine Transform (DCT)</strong> to approximate spatial derivatives, while time integration is performed using the adaptive <code>lsoda</code> solver.
 </p>
+
+<h4>2. SVEIR Spectral PDE Model</h4>
+<p>
+The governing PDEs with spectral Laplacians are:
+</p>
+<p>
+\[
+\begin{aligned}
+\frac{\partial S}{\partial t} &= -\beta\beta_e E S - \beta\beta_i I S + \alpha I S - \phi S - rS + \delta R + \theta V + r + d_1 L(S) \\
+\frac{\partial V}{\partial t} &= -\beta\beta_e\beta_v E V - \beta\beta_i\beta_v I V + \alpha I V - rV - \theta V + \phi S + d_2 L(V) \\
+\frac{\partial E}{\partial t} &= \beta\beta_e E S + \beta\beta_i I S + \beta\beta_e\beta_v E V + \beta\beta_i\beta_v I V + \alpha I E - (r + \kappa + \sigma) E + d_3 L(E) \\
+\frac{\partial I}{\partial t} &= \sigma E - (r + \alpha + \gamma) I + \alpha I^2 + d_4 L(I) \\
+\frac{\partial R}{\partial t} &= \kappa E + \gamma I - rR - \delta R + \alpha I R + d_5 L(R)
+\end{aligned}
+\]
+</p>
+<p>
+Here, \( L(u) \) denotes the Laplacian computed via the spectral approximation:
+</p>
+<p>
+\[
+L(u) \approx \text{IDCT}\left(-\left(\frac{k\pi}{2L}\right)^2 \cdot \text{DCT}(u)\right)
+\]
+</p>
+<p>
+where \( k = 0, 1, \dots, N-1 \) are the spectral modes, and \( L = \frac{x_u - x_l}{2} \) is half the spatial domain width.
+</p>
+
+<h4>3. Space–Time Grid</h4>
+<p>
+The spatial domain \( x \in [x_l, x_u] \) is uniformly divided into \( n_x \) grid points:
+</p>
+<p>
+\[
+x_i = x_l + (i - 1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}, \quad i = 1, \dots, n_x
+\]
+</p>
+<p>
+Time domain: \( t_n = t_0 + n\Delta t \), solved adaptively at selected output points using <code>lsoda</code>.
+</p>
+
+<h4>4. Initial Conditions</h4>
+<p>
+\[
+\begin{aligned}
+S(x,0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \quad
+V(x,0) = 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+I(x,0) &= 0.04 \exp(-x^2), \quad
+E(x,0) = 0, \quad R(x,0) = 0
+\end{aligned}
+\]
+</p>
+
+<h4>5. Spectral Approximation Steps</h4>
+<ol>
+  <li>Apply the DCT: \( \hat{u}_k = \text{DCT}(u) \)</li>
+  <li>Scale in frequency domain: \( \hat{u}_{xx,k} = -\left(\frac{k\pi}{2L}\right)^2 \hat{u}_k \)</li>
+  <li>Apply the inverse DCT: \( u_{xx} = \text{IDCT}(\hat{u}_{xx,k}) \)</li>
+</ol>
+<p>
+This yields high-accuracy approximations under Neumann (zero-flux) boundary conditions.
+</p>
+
+<h4>6. Time Integration</h4>
+<p>
+After transforming the PDE system into a system of ODEs via the DCT-based Laplacian, we solve it using <code>lsoda</code> from the <code>deSolve</code> R package. This solver automatically switches between stiff and non-stiff methods, offering both stability and speed.
+</p>
+
+<h4>7. Output</h4>
+<p>
+Solutions \( S(x,t), V(x,t), E(x,t), I(x,t), R(x,t) \) are reconstructed for:
+</p>
+<ul>
+  <li>Fixed time snapshots \( t = 0, 6, \dots, 60 \)</li>
+  <li>Fixed spatial point (e.g., \( x = 0 \)) across time</li>
+</ul>
+
+<h4>8. Conclusion</h4>
+<p>
+The spectral method delivers highly accurate spatial approximations for smooth problems. When combined with robust adaptive time-stepping (like <code>lsoda</code>), it efficiently simulates the dynamics of influenza spread in a spatially structured population.
+</p>
+
 
 <h2>V. Deep Learning Solution</h2>
 
