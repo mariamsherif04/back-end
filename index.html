@@ -154,6 +154,337 @@
     <tr><td>d<sub>5</sub></td><td>Diffusivity for R</td><td>0</td></tr>
   </tbody>
 </table>
+<h2>IV. Numerical Solutions</h2>
+<p>This section presents the various numerical techniques applied to solve the spatiotemporal SVEIR model for influenza transmission.</p>
+
+<h3>Crank–Nicolson Numerical Method</h3>
+
+<p>
+  We used a semi-implicit Crank–Nicolson method to solve the SVEIR PDE model. Diffusion terms are treated implicitly, while nonlinear reaction terms are computed explicitly. This requires solving a tridiagonal system for each compartment at every time step.
+</p>
+
+<h4>Spatial and Temporal Grids</h4>
+<p>
+  The spatial domain is defined as \( x \in [x_l, x_u] \) and divided into \( n_x \) uniform grid points:
+</p>
+<p>
+  $$
+  \Delta x = \frac{x_u - x_l}{n_x - 1}, \quad \Delta x^2 = (\Delta x)^2
+  $$
+</p>
+
+<h4>Initial Conditions</h4>
+<p>
+  $$
+  \begin{aligned}
+  S(x, 0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+  V(x, 0) &= 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+  E(x, 0) &= 0, \quad I(x, 0) = 0.04 \exp(-x^2), \quad R(x, 0) = 0
+  \end{aligned}
+  $$
+</p>
+
+<h4>Crank–Nicolson Matrix Construction</h4>
+<p>
+  For each compartment, define a diffusion coefficient \( d_i \) (e.g., \( d_1 = 0.05 \) for \( S \)).  
+  Compute:
+</p>
+<p>
+  $$
+  \lambda = \frac{d_i \, \Delta t}{2 \Delta x^2}
+  $$
+</p>
+<p>
+  Then construct the tridiagonal matrix \( A \) as:
+</p>
+<p>
+  $$
+  A = \text{diag}(1 + 2\lambda) + \text{diag}(-\lambda, 1) + \text{diag}(-\lambda, -1)
+  $$
+</p>
+
+<h4>Time-Stepping Scheme</h4>
+<p>For each time step \( k = 1 \) to \( N_t - 1 \), extract the current state vectors \( S^k, V^k, E^k, I^k, R^k \), and compute the nonlinear terms (reaction terms):</p>
+
+<p>
+  $$
+  \begin{aligned}
+  F_S &= -\beta \beta_E E^k S^k - \beta \beta_I I^k S^k + \alpha I^k S^k - \phi S^k - r S^k + \delta R^k + \theta V^k \\
+  F_V &= -\beta \beta_E \beta_V E^k V^k - \beta \beta_I \beta_V I^k V^k + \alpha I^k V^k - r V^k - \theta V^k + \phi S^k \\
+  F_E &= \beta \beta_E E^k S^k + \beta \beta_I I^k S^k + \beta \beta_E \beta_V E^k V^k + \beta \beta_I \beta_V I^k V^k + \alpha E^k I^k - (r + \kappa + \sigma) E^k \\
+  F_I &= \sigma E^k - (r + \alpha + \gamma) I^k + \alpha (I^k)^2 \\
+  F_R &= \kappa E^k + \gamma I^k - r R^k - \delta R^k + \alpha I^k R^k
+  \end{aligned}
+  $$
+</p>
+
+<h4>Update Step</h4>
+<p>
+  Update each compartment using the Crank–Nicolson scheme:
+</p>
+<p>
+  $$
+  U^{k+1} = A^{-1} \left(U^k + \Delta t \cdot F_U\right), \quad \text{for } U \in \{S, V, E, I, R\}
+  $$
+</p>
+
+<h4>Remarks</h4>
+<p>
+  This method is efficient due to the tridiagonal nature of matrix \( A \), allowing fast solutions. Explicit handling of the nonlinear terms avoids solving a nonlinear system, but may slightly reduce accuracy. Overall, Crank–Nicolson offers a good balance between stability and computational cost for reaction–diffusion models.
+</p>
+<h3>Explicit Finite Difference Method</h3>
+
+<p>
+To solve the spatiotemporal SVEIR model numerically, we first implemented the Explicit Forward Euler Method, a basic time-stepping scheme. This method discretizes both time and space and advances the solution iteratively. It is easy to implement but conditionally stable, requiring careful choice of time step size.
+</p>
+
+<h4>Space–Time Grid</h4>
+<p>
+The spatial domain is defined as \( x \in [x_l, x_u] \) and divided into \( n_x \) uniform grid points:
+</p>
+<p>
+$$
+x_i = x_l + (i-1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}, \quad i = 1, 2, \ldots, n_x
+$$
+<p>
+Time is discretized using a uniform time step \( \Delta t \), up to a final time \( t_f \):
+</p>
+<p>
+$$
+t_n = t_0 + n\Delta t, \quad n = 0, 1, 2, \ldots, N_t
+$$
+
+<h4>Initial Conditions</h4>
+<p>
+$$
+\begin{aligned}
+S(x, 0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+V(x, 0) &= 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+E(x, 0) &= 0, \quad I(x, 0) = 0.04 \exp(-x^2), \quad R(x, 0) = 0
+\end{aligned}
+$$
+</p>
+
+<h4>Laplacian Approximation</h4>
+<p>
+The second derivative in space is approximated using central differences:
+</p>
+<p>
+$$
+\frac{\partial^2 u}{\partial x^2} \approx \frac{u_{i+1} - 2u_i + u_{i-1}}{(\Delta x)^2}
+$$
+<p>
+This approximation is applied to each compartment to capture diffusion effects.
+</p>
+
+<h4>Explicit Update Equations</h4>
+<p>
+At each time step \( t_n \), we compute the solution at \( t_{n+1} \) using the Forward Euler update:
+</p>
+
+<p>
+$$
+\begin{aligned}
+S_i^{n+1} &= S_i^n + \Delta t \left( -\beta\beta_E E_i^n S_i^n - \beta\beta_I I_i^n S_i^n + \alpha I_i^n S_i^n - \phi S_i^n - r S_i^n + \delta R_i^n + \theta V_i^n + r + d_1 \nabla^2 S_i^n \right) \\
+V_i^{n+1} &= V_i^n + \Delta t \left( -\beta\beta_E\beta_V E_i^n V_i^n - \beta\beta_I\beta_V I_i^n V_i^n + \alpha I_i^n V_i^n - r V_i^n - \theta V_i^n + \phi S_i^n + d_2 \nabla^2 V_i^n \right) \\
+E_i^{n+1} &= E_i^n + \Delta t \left( \beta\beta_E E_i^n S_i^n + \beta\beta_I I_i^n S_i^n + \beta\beta_E\beta_V E_i^n V_i^n + \beta\beta_I\beta_V I_i^n V_i^n + \alpha I_i^n E_i^n - (r + \kappa + \sigma) E_i^n + d_3 \nabla^2 E_i^n \right) \\
+I_i^{n+1} &= I_i^n + \Delta t \left( \sigma E_i^n - (r + \alpha + \gamma) I_i^n + \alpha (I_i^n)^2 + d_4 \nabla^2 I_i^n \right) \\
+R_i^{n+1} &= R_i^n + \Delta t \left( \kappa E_i^n + \gamma I_i^n - r R_i^n - \delta R_i^n + \alpha I_i^n R_i^n + d_5 \nabla^2 R_i^n \right)
+\end{aligned}
+$$
+</p>
+
+<p>
+Here, \( \nabla^2 U_i^n \) represents the discrete Laplacian for variable \( U \) at grid point \( i \) and time \( n \).
+</p>
+
+<h4>Stability Considerations</h4>
+<p>
+This method is conditionally stable. The stability is especially sensitive to the diffusion terms, requiring a sufficiently small \( \Delta t \) based on the spatial resolution \( \Delta x \) and diffusivity values \( d_j \). While computationally efficient for small time intervals and moderate grid sizes, it can become unstable if the time step is too large.
+</p>
+<h3>Strang Splitting Method</h3>
+
+<p>
+This method decouples the reaction and diffusion components of the system. This operator splitting technique enables each physical process—reaction and diffusion—to be handled using the most suitable numerical method, enhancing both stability and efficiency.
+</p>
+
+<h4>Governing Equations</h4>
+
+<p>
+Each equation includes nonlinear reaction terms and spatial diffusion:
+</p>
+
+<p>
+$$
+\frac{\partial u_i}{\partial t} = \text{Reaction}_i(u_1, u_2, u_3, u_4, u_5) + d_i \frac{\partial^2 u_i}{\partial x^2}, \quad i = 1, 2, \ldots, 5
+$$
+</p>
+
+<p>
+where \( u_i \in \{S, V, E, I, R\} \), and \( d_i \) is the diffusion coefficient for each compartment.
+</p>
+
+<h4>Spatial and Temporal Discretization</h4>
+
+<p>
+The spatial domain is defined as \( x \in [x_l, x_u] \) and discretized into \( n_x \) grid points:
+</p>
+
+<p>
+$$
+x_i = x_l + (i - 1)\Delta x, \quad \Delta x = \frac{x_u - x_l}{n_x - 1}, \quad i = 1, 2, \ldots, n_x
+$$
+</p>
+
+<p>
+Time is discretized similarly, using a uniform time step \( \Delta t \), up to a final time \( t_f \):
+</p>
+
+<p>
+$$
+t_n = t_0 + n \Delta t, \quad n = 0, 1, 2, \ldots, N_t
+$$
+</p>
+
+<h4>Initial Conditions</h4>
+
+<p>
+The variable initializations are identical to those used in the Crank–Nicolson method, following the same setup as the original model:
+</p>
+
+<p>
+$$
+\begin{aligned}
+S(x, 0) &= 0.86 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+V(x, 0) &= 0.10 \exp\left(-\left(\frac{x}{1.4}\right)^2\right), \\
+E(x, 0) &= 0, \quad I(x, 0) = 0.04 \exp(-x^2), \quad R(x, 0) = 0
+\end{aligned}
+$$
+</p>
+
+<h4>Splitting Strategy</h4>
+
+<p>
+Each full time step \( \Delta t \) is advanced using the following symmetric sequence:
+</p>
+
+<h5>Step 1: Half-Step Reaction</h5>
+
+<p>
+The reaction terms are integrated using a classical fourth-order Runge–Kutta method over a half-step \( \Delta t / 2 \).
+</p>
+
+<h5>Step 2: Full-Step Diffusion</h5>
+
+<p>
+The diffusion terms are updated using explicit forward Euler with substeps. The second spatial derivative is approximated using central differences:
+</p>
+
+<p>
+$$
+\frac{\partial^2 u}{\partial x^2} \approx \frac{u_{i+1} - 2u_i + u_{i-1}}{(\Delta x)^2}
+$$
+</p>
+
+<p>
+The diffusion is computed with 20 substeps of size:
+</p>
+
+<p>
+$$
+\Delta t_{\text{sub}} = \frac{\Delta t}{20}
+$$
+</p>
+
+<h5>Step 3: Half-Step Reaction</h5>
+
+<p>
+A second Runge–Kutta integration is performed over the remaining half-step to complete the time advancement.
+</p>
+
+<h4>Remarks</h4>
+
+<p>
+This method allows flexibility by using different solvers suited to each component (reaction vs. diffusion). It is well-suited for nonlinear, spatially extended epidemic models, as it balances accuracy, speed, and implementation simplicity.
+</p>
+<h2>V. Deep Learning Solution</h2>
+
+<h3>A. Introduction</h3>
+<p>
+This part of the project uses Deep Learning (DL) techniques, specifically <strong>Physics-Informed Neural Networks (PINNs)</strong>, to solve a system of partial differential equations (PDEs) modeling the spread of influenza with vaccination and spatial diffusion. Unlike traditional numerical methods (such as Finite Difference or Finite Element), DL-based methods do not require mesh generation or discretization and can generalize across space–time domains.
+</p>
+
+<h3>B. What Deep Learning Is Solving</h3>
+<p>
+The neural network learns to approximate the five functions:
+</p>
+<p>
+$$
+S(x, t), \quad V(x, t), \quad E(x, t), \quad I(x, t), \quad R(x, t)
+$$
+<p>
+which represent the densities of susceptible, vaccinated, exposed, infected, and recovered individuals, respectively. The network is trained to minimize the mismatch in PDE residuals and satisfy initial and boundary conditions.
+</p>
+
+<h3>C. Data and Input Representation</h3>
+<ul>
+  <li>Input space: a 2D grid of points \((x, t)\) generated using PyTorch functions like <code>torch.linspace</code> and <code>meshgrid</code>.</li>
+  <li>Each network input is a 2D vector \([x, t]\).</li>
+  <li>Only 20 labeled points from the true numerical solution are used to guide training.</li>
+</ul>
+
+<h3>D. The Neural Network (PINN)</h3>
+<ul>
+  <li><strong>Inputs:</strong> \( x \) and \( t \)</li>
+  <li><strong>Hidden layers:</strong> Fully connected (dense) layers with activation functions like Tanh, Sigmoid, or ReLU</li>
+  <li><strong>Output:</strong> 5 values — \( [S, V, E, I, R] \)</li>
+</ul>
+
+<p>The network is trained to satisfy the following conditions:</p>
+<ol>
+  <li>The PDE system (i.e., the equations governing disease spread)</li>
+  <li>Initial conditions (population values at \( t = 0 \))</li>
+  <li>Boundary conditions (Neumann/no-flux: \( \frac{\partial U}{\partial x} = 0 \))</li>
+  <li>Supervision on 20 data points to improve convergence</li>
+</ol>
+
+<h3>E. Loss Function</h3>
+<p>
+The total loss is composed of multiple mean squared error (MSE) terms:
+</p>
+<p>
+$$
+\text{Total Loss} = \text{MSE}_{\text{PDE}} + \text{MSE}_{\text{IC}} + \text{MSE}_{\text{BC}} + \text{MSE}_{\text{Data}}
+$$
+</p>
+<ul>
+  <li><strong>\( \text{MSE}_{\text{PDE}} \)</strong>: Residuals of the PDEs (physics loss)</li>
+  <li><strong>\( \text{MSE}_{\text{IC}} \)</strong>: Deviation from initial conditions</li>
+  <li><strong>\( \text{MSE}_{\text{BC}} \)</strong>: Enforcing zero-flux boundary condition</li>
+  <li><strong>\( \text{MSE}_{\text{Data}} \)</strong>: Error on known true points</li>
+</ul>
+
+<h3>F. Optimization Strategy</h3>
+<p>
+Training is performed in two stages:
+</p>
+<ol>
+  <li><strong>Stage 1:</strong> Adam optimizer (adaptive, fast convergence)</li>
+  <li><strong>Stage 2:</strong> LBFGS optimizer (second-order, fine-tunes weights for better precision)</li>
+</ol>
+
+<h3>G. Challenges and Notes</h3>
+<p>
+While PINNs offer flexibility, they also face limitations. Some compartments—particularly \( I(x, t) \) and \( E(x, t) \)—may exhibit inaccuracies or oscillations. This can be caused by:
+</p>
+<ul>
+  <li>Imbalanced weights among loss terms</li>
+  <li>Insufficient model complexity (too few neurons/layers)</li>
+  <li>Inaccurate gradients or poor initialization</li>
+</ul>
+<p>
+Adjusting weight terms and increasing the number of training data points can improve performance. Regularization and adaptive learning rates may also help stabilize learning.
+</p>
 
 
 </body>
