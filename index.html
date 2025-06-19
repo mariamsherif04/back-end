@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Influenza SVEIR Model</title>
+  <link rel="stylesheet" href="style.css" />
+  
+  <!-- MathJax for rendering LaTeX equations -->
+  <script type="text/javascript"
+    id="MathJax-script"
+    async
+    src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js">
+  </script>
+</head>
+<body>
+  <h1>🦠 Influenza SVEIR PDE Model</h1>
+
+  <h2>Abstract</h2>
+  <p>
+    This project solves a spatial SVEIR PDE model using multiple numerical methods...
+  </p>
+
+  <h2>Model Equations</h2>
+  <p>Equations are rendered below using MathJax:</p>
+
+  <p>
+    $$
+    \frac{\partial S}{\partial t} = -\beta E S - \beta I S + \alpha I S - \phi S - rS + \delta R + \theta V + r + d_1 \frac{\partial^2 S}{\partial x^2}
+    $$
+  </p>
+
+  <h2>Plots</h2>
+  <img src="plots/strang_plot.png" alt="Strang Splitting Plot" width="600"/>
+
+  <h2>References</h2>
+  <ul>
+    <li>Chen & Xu (2019) - Delayed PDE model of influenza</li>
+    <li>Jang et al. (2020) - SIR diffusion and vaccination optimization</li>
+  </ul>
+</body>
+</html>
