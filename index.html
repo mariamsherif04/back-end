@@ -819,7 +819,7 @@ While PINNs offer flexibility, they also face limitations. Some compartments—p
 Adjusting weight terms and increasing the number of training data points can improve performance. Regularization and adaptive learning rates may also help stabilize learning.
 </p>
 
-h2>VI. Results</h2>
+<h2>VI. Results</h2>
 
 <p>
 This section presents and compares the spatial and temporal behavior of the <strong>Susceptible (S)</strong> and <strong>Recovered (R)</strong> populations under different numerical methods. The reference solution obtained using the <em>Method of Lines (MOL)</em> serves as a benchmark for comparison against the <strong>Crank–Nicolson</strong>, <strong>Strang Splitting</strong>, and <strong>Deep Learning</strong> approaches.
@@ -859,9 +859,6 @@ The Method of Lines discretizes space and solves the resulting system of ODEs us
     <figcaption><strong>R(x,t):</strong> Gradually rises and then plateaus.</figcaption>
   </figure>
 
-  <p style="text-align:center; font-size: 1rem; color:#374151; margin-top: 1rem;">
-    Each compartment displays smooth, symmetric wave-like patterns, consistent with diffusion and biological dynamics.
-  </p>
 </div>
 
 
@@ -896,12 +893,95 @@ The Method of Lines discretizes space and solves the resulting system of ODEs us
     <figcaption><strong>R(0,t):</strong> Monotonic increase as population recovers.</figcaption>
   </figure>
 
-  <p style="text-align:center; font-size: 1rem; color:#374151; margin-top: 1rem;">
-    We also track each compartment's value over time at the spatial center (<em>x = 0</em>), revealing typical epidemic patterns and delays.
-  </p>
+  
 </div>
 
+<p style="text-align:center; font-size: 1rem; color:#374151; margin-top: 1rem;">
+    We also track each compartment's value over time at the spatial center (<em>x = 0</em>), revealing typical epidemic patterns and delays.
+  </p>
 
+<h4>2. Crank–Nicolson Method</h4>
+<h4>3. Explicit FD Method</h4>
+<h4>4. Strang Splitting Method</h4>
+
+<h4>5. Finite Volume Method</h4>
+<h4>6. Spectral Method</h4>
+
+<h3>B. Deep Learning Results</h3>
+
+<section>
+  <h2>C. Errors & Comparisons</h2>
+  <p>
+    The errors were computed as element-wise absolute differences from the MOL solution across the spatial grid.
+    This was done for all methods, including the deep learning model, and the mean absolute error was calculated
+    for each compartment (<strong>S, V, E, I, R</strong>) to quantify accuracy.
+  </p>
+
+  <h3>Mean Absolute Errors</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Method</th>
+        <th>S</th>
+        <th>V</th>
+        <th>E</th>
+        <th>I</th>
+        <th>R</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>Explicit</td><td>0.0390</td><td>0.1524</td><td>0.1668</td><td>0.3759</td><td>1.7133</td></tr>
+      <tr><td>FVM</td><td>0.0407</td><td>0.1617</td><td>0.1667</td><td>0.3758</td><td>1.7129</td></tr>
+      <tr><td>CN</td><td>0.0287</td><td>0.1146</td><td>0.1657</td><td>0.3732</td><td>1.6934</td></tr>
+      <tr><td>SS</td><td>0.0272</td><td>0.1020</td><td>0.1671</td><td>0.3766</td><td>1.7161</td></tr>
+      <tr><td>Spectral</td><td>0.0315</td><td>0.1295</td><td>0.1649</td><td>0.3711</td><td>1.6796</td></tr>
+      <tr><td>DL</td><td>0.0397</td><td>0.0339</td><td>0.0573</td><td>0.0450</td><td>0.0673</td></tr>
+    </tbody>
+  </table>
+
+  <h3>Runtime Comparison (seconds)</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Mode</th>
+        <th>MOL</th>
+        <th>Explicit</th>
+        <th>FVM</th>
+        <th>CN</th>
+        <th>SS</th>
+        <th>DL</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>ip = 1</td><td>0.14</td><td>0.23</td><td>1.15</td><td>2.13</td><td>3.27</td><td>1320</td></tr>
+      <tr><td>ip = 2</td><td>0.14</td><td>0.24</td><td>1.09</td><td>2.07</td><td>0.84</td><td>–</td></tr>
+    </tbody>
+  </table>
+
+  <p>
+    Based on the error and runtime comparison, the <strong>DL method</strong> appears to be more accurate,
+    although it requires significantly more computational time.
+  </p>
+</section>
+
+<section>
+  <h2>VII. Improvements & Future Work</h2>
+  <ol>
+    <li><strong>Optimization Improvements:</strong> Start with SGD warm-up for stability, continue with Adam for fast convergence, and finalize with LBFGS for refinement.</li>
+    <li><strong>Model Architecture:</strong> Use deeper networks with ResNet-style residual connections for easier training.</li>
+    <li><strong>Loss Function Strategy:</strong> Try dynamic loss weighting: relative loss scaling, uncertainty-based weighting, or gradient balancing (e.g., GradNorm).</li>
+    <li><strong>Use of Real Epidemiological Data:</strong> Integrate real influenza surveillance data (e.g., CDC, WHO) to validate and calibrate PINN predictions for real-world use.</li>
+  </ol>
+</section>
+
+<section>
+  <h2>References</h2>
+  <ol>
+    <li><a href="https://doi.org/10.1016/j.matcom.2019.08.002" target="_blank">Chen & Xu, Mathematical and Computer Modelling (2019)</a></li>
+    <li><a href="https://doi.org/10.1016/j.amc.2018.12.065" target="_blank">Jang et al., Applied Mathematics and Computation (2020)</a></li>
+    <li>Schiesser, *Differential Equation Analysis in Biomedical Science and Engineering*, Wiley (2014)</li>
+  </ol>
+</section>
 
 </body>
 </html>
